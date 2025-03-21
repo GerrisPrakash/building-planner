@@ -10,39 +10,54 @@ interface RoughElement {
   y1: number;
   x2: number;
   y2: number;
-  type: 'line' | 'rectangle' | 'circle' | 'moving';
+  type: 'line' | 'rectangle' | 'circle' | 'moving'; // Only these types are valid
   roughElement: any; // Type for roughjs element
 }
 
 const DrawingScreen = () => {
   const generator = rough.generator();
-  
+
   const [elements, setElement] = useState<RoughElement[]>([]);
-  const [shape, setShape] = useState<string>('');  // Shape can be line, rectangle, circle, or moving
+  const [shape, setShape] = useState<'line' | 'rectangle' | 'circle' | 'moving'>('moving');  // Set the type to a union of the valid shape types
   const [action, setAction] = useState<'none' | 'drawing' | 'moving'>('none');
   const [selectedElement, setSelectedelement] = useState<RoughElement | null>(null);
   const [detetedList, setDeletedList] = useState<RoughElement[]>([]);
 
-  const createElement = (id: number, x1: number, y1: number, x2: number, y2: number, type: string): RoughElement => {
+  // Modify createElement to accept only valid shape types
+  const createElement = (
+    id: number,
+    x1: number,
+    y1: number,
+    x2: number,
+    y2: number,
+    type: 'line' | 'rectangle' | 'circle' | 'moving'
+  ): RoughElement | null => {
     let roughElement = null;
-    switch (type) {
-      case 'line':
-        roughElement = generator.line(x1, y1, x2, y2, { roughness: 0 });
-        break;
-      case 'rectangle':
-        roughElement = generator.rectangle(x1, y1, x2 - x1, y2 - y1, { roughness: 0 });
-        break;
-      case 'circle':
-        const radius = Math.sqrt(Math.pow(x2 - x1, 2) + Math.pow(y2 - y1, 2));
-        roughElement = generator.circle(x1, y1, radius * 2, { roughness: 0 });
-        break;
-      default:
-        roughElement = generator.line(x1, y1, x2, y2, { roughness: 0 });;
+
+    // Ensure we only use valid shapes
+    if (type === 'line') {
+      roughElement = generator.line(x1, y1, x2, y2, { roughness: 0 });
+    } else if (type === 'rectangle') {
+      roughElement = generator.rectangle(x1, y1, x2 - x1, y2 - y1, { roughness: 0 });
+    } else if (type === 'circle') {
+      const radius = Math.sqrt(Math.pow(x2 - x1, 2) + Math.pow(y2 - y1, 2));
+      roughElement = generator.circle(x1, y1, radius * 2, { roughness: 0 });
     }
+
+    // Return null if the type is not valid
+    if (!roughElement) return null;
+
     return { id, x1, y1, x2, y2, type, roughElement };
   };
 
-  const updateElement = (id: number, x1: number, y1: number, x2: number, y2: number, type: string) => {
+  const updateElement = (
+    id: number,
+    x1: number,
+    y1: number,
+    x2: number,
+    y2: number,
+    type: 'line' | 'rectangle' | 'circle' | 'moving'
+  ) => {
     const updatedElement = createElement(id, x1, y1, x2, y2, type);
     if (updatedElement) {
       const elementCopy = [...elements];
@@ -76,7 +91,7 @@ const DrawingScreen = () => {
         setSelectedelement(element);
         setAction('moving');
       }
-    } else {
+    } else if (shape) {
       const id = elements.length;
       const element = createElement(id, clientX, clientY, clientX, clientY, shape);
       if (element) {
@@ -131,7 +146,8 @@ const DrawingScreen = () => {
 
   const handleShapeChange = (selectedOption: SingleValue<{ value: string; label: string }>) => {
     if (selectedOption) {
-      setShape(selectedOption.value); // Set the shape value based on selection
+      const selectedValue = selectedOption.value as 'line' | 'rectangle' | 'circle' | 'moving'; // Assert type to restrict possible values
+      setShape(selectedValue); // Set shape to a valid type
     }
   };
 
