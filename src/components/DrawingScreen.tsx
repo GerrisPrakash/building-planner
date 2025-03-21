@@ -142,6 +142,7 @@ const DrawingScreen = () => {
   const actionList = [
     { value: 'undo', label: 'Undo' },
     { value: 'redo', label: 'Redo' },
+    {value: 'clear', label: 'Clear All'}
   ];
 
   const handleShapeChange = (selectedOption: SingleValue<{ value: string; label: string }>) => {
@@ -160,6 +161,9 @@ const DrawingScreen = () => {
       const deletedCopy = [...detetedList];
       setElement(prevState => [...prevState, deletedCopy.pop()!]);
       setDeletedList(deletedCopy);
+    } else if(selectedOption?.value === 'clear'){
+      setElement([])
+      setDeletedList([])
     }
   };
 
